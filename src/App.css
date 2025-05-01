@@ -1,22 +1,43 @@
+:root {
+  --border-radius: 5px;
+}
+
 .App {
-  width: 500px;
-  height: 500px;
-  text-align: center;
+  width: fit-content;
   border: 1px solid black;
 }
 
 ._partyLevelBox {
   display: flex;
   align-items: center;
-  width: 100%;
-  justify-content: center;
-}
-._partyLevelInput {
-  width: 20px;
-
 }
 
-._monsterCRsGrid {
+._inputGrid {
   display: flex;
   flex-direction: column;
+}
+._inputGridTitle {
+  align-self: center;
+}
+
+._inputGridContainer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 10px;
+  justify-content: center;
+}
+._addRowButton {
+  width: fit-content;
+  border-radius: var(--border-radius)
+}
+
+._valueAndCountContainer {
+  display: flex;
+  align-self: flex-start;
+  justify-content: center;
+  align-items: center;
+}
+
+._hidden {
+  visibility: hidden;;
 }

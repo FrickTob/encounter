@@ -1,70 +1,145 @@
-import { useState } from 'react';
+import {useEffect, useState } from 'react';
 import './App.css';
+import { multiplyByMultiplier, getXPThreshFromCR, getXPThreshFromLevel } from './DifficultyCalcs';
+
+const EncounterDifficulties = {
+  0: "Trivial",
+  1: "Easy",
+  2: "Medium",
+  3: "Hard",
+  4: "Deadly"
+}
+
+const InputGridTypes = {
+  PARTY_LEVEL: 1,
+  MONSTER_CR: 2
+}
 
 function App() {
-  const [partyLevel,setPartyLevel] = useState(1)
-  const [monsterCRArr, setMonsterCRArr] = useState([1,2,3])
+  const [partyLevelArr,setPartyLevelArr] = useState([{value: 0, count: 0}])
+  const [monsterCRArr, setMonsterCRArr] = useState([{value: 0, count: 0}])
+
+  const [partyXPThresh, setPartyXPThresh] = useState({easy: 0, medium: 0, hard: 0, deadly: 0})
+  const [monsterXP, setMonsterXP] = useState(0)
+
+  const [encounterDifficulty, setEncounterDifficulty] = useState(0)
+
+  useEffect(() => {
+    const vals = {...partyLevelArr}
+    vals.easy = partyLevelArr.reduce((acc, level) => acc + (getXPThreshFromLevel(1,level.value) * level.count),0)
+    vals.medium = partyLevelArr.reduce((acc, level) => acc + (getXPThreshFromLevel(2,level.value) * level.count),0)
+    vals.hard = partyLevelArr.reduce((acc, level) => acc + (getXPThreshFromLevel(3,level.value) * level.count),0)
+    vals.deadly = partyLevelArr.reduce((acc, level) => acc + (getXPThreshFromLevel(4,level.value) * level.count),0)
+    setPartyXPThresh(vals)
+  }, [partyLevelArr])
+
+  useEffect(() => {
+    const monsterXPSum = monsterCRArr.reduce((acc, cr) => acc + (getXPThreshFromCR(cr.value) * cr.count),0)
+    const numMonsters = monsterCRArr.reduce((acc, cr) => acc + cr.count,0)
+    const monsterXP = multiplyByMultiplier(monsterXPSum, numMonsters)
+    setMonsterXP(monsterXP)
+  },[monsterCRArr])
+
+  useEffect(() => {
+    if (monsterXP < partyXPThresh.easy) setEncounterDifficulty(0)
+    else if (monsterXP < partyXPThresh.medium) setEncounterDifficulty(1)
+    else if (monsterXP < partyXPThresh.hard) setEncounterDifficulty(2)
+    else if (monsterXP < partyXPThresh.deadly) setEncounterDifficulty(3)
+    else setEncounterDifficulty(4)
+  }, [partyXPThresh, monsterXP])
 
   return (<div className="App">
-  <InputBox inputText={partyLevel} setInputText={setPartyLevel} />
-  <MonsterCRsGrid monsterCRArr={monsterCRArr} setMonsterCRArr={setMonsterCRArr} />
-  <p>Difficulty</p>
-  <p>{monsterCRArr}</p>
+  <div className="_inputGridContainer">
+    <div>
+    <InputGrid title="Your Party" valsArr={partyLevelArr} setValsArr={setPartyLevelArr} inputGridType={InputGridTypes.PARTY_LEVEL} />
+    <p>Difficulty</p>
+  <p>{partyXPThresh.easy}</p>
+  <p>{partyXPThresh.medium}</p>
+  <p>{partyXPThresh.hard}</p>
+  <p>{partyXPThresh.deadly}</p>
+  <p>{monsterXP}</p>
+    </div>
+    <div>
+    <InputGrid title="Monsters" valsArr={monsterCRArr} setValsArr={setMonsterCRArr} inputGridType={InputGridTypes.MONSTER_CR}  />
+    <p>Encounter Difficulty: {EncounterDifficulties[encounterDifficulty]}</p>
+    </div>
+  </div>
   </div>)
 }
 
 export default App;
 
-const InputBox = (props) => {
+const InputGrid = (props) => {
+  const {title, valsArr, setValsArr,inputGridType} = props;
 
-  const {inputText, setInputText} = props;
-  const handleTextChange = (event) => {
-    setInputText(event.target.value);
-  }
-  return (
-    <div className='_partyLevelBox'>
-      <p>Party Level</p>
-      <input className='_partyLevelInput' value={inputText} onChange={handleTextChange}></input>
-    </div>
-  );
-}
-
-const MonsterCRsGrid = (props) => {
-  const {monsterCRArr, setMonsterCRArr} = props;
-
-  const addNewCRVal =(value) => {
-    const values = [...monsterCRArr]
-    values.push(value)
-    setMonsterCRArr(values)
+  const addNewRow =() => {
+    const values = [...valsArr]
+    values.push({value: "", count: ""})
+    setValsArr(values)
   }
 
+  const onTriggerRemove = (index) => {
+    const values = [...valsArr]
+    values.splice(index, 1)
+    setValsArr(values)
+  }
+
+
   return (
-    <div className="_monsterCRsGrid">
-      {monsterCRArr.map((monsterCRVal,index) => {
-      const focusField = (index) => {
-        
+    <div className="_inputGrid">
+      <h3 className="_inputGridTitle">{title}</h3>
+
+      {valsArr.map((val,index) => {
+      const setVal = (value) => {
+        const values = [...valsArr]
+        values[index].value= value
+        setValsArr(values)
       }
-      const setMonsterCRVal = (value) => {
-        const values = [...monsterCRArr]
-        values[index]= value
-        setMonsterCRArr(values)
+      const setCount = (count) => {
+        const values = [...valsArr]
+        values[index].count= count
+        setValsArr(values)
       }
 
         return (
-          <MonsterCRInput monsterCRVal={monsterCRVal} setMonsterCRVal={setMonsterCRVal} />
+          <ValAndCountContainer 
+              val={val.value}  
+              setVal={setVal} 
+              count={val.count} 
+              setCount={setCount} 
+              onTriggerRemove={onTriggerRemove} 
+              index={index} />
         )
       })}
-      <MonsterCRInput monsterCRVal={""} setMonsterCRVal={addNewCRVal} />
+      <button className="_addRowButton" onClick={addNewRow}>Add Row</button>
     </div>
   )
 }
 
-const MonsterCRInput = (props) => {
-  const {monsterCRVal, setMonsterCRVal} = props;
-  const onValChange = (event) => {
-    setMonsterCRVal(event.target.value)
-  }
+const ValAndCountContainer = (props) => {
+  const {val, setVal, count, setCount, onTriggerRemove, index} = props;
+  return (
+    <div className='_valueAndCountContainer'>
+          <ValInputField val={val} setVal={setVal} index={index} />
+          <ValCountField count={count} setCount={setCount} />
+          <button className={"_removeRowButton " + (index === 0 ? "_hidden" : "")} onClick={() => {onTriggerRemove(index)}}>Remove</button>
+    </div>
+  )
+}
 
-  return <input placeholder='CR' value={monsterCRVal} onChange={onValChange}/>
+const ValInputField = (props) => {
+  const {val, setVal, index} = props;
+  const onValChange = (event) => {
+    setVal(event.target.value)
+  }
+  return <input placeholder='CR' value={val} onChange={onValChange}/>
+}
+
+const ValCountField = (props) => {
+  const {count, setCount} = props;
+  const onCountChange = (event) => {
+    setCount(event.target.value)
+  }
+  return <input className='_countField' placeholder='Count' value={count} onChange={onCountChange}/>
 }
 
