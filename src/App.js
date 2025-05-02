@@ -1,4 +1,6 @@
 import {useEffect, useState } from 'react';
+import 'bootstrap/dist/css/bootstrap.css'
+import "bootstrap-icons/font/bootstrap-icons.css";
 import './App.css';
 import { multiplyByMultiplier, getXPThreshFromCR, getXPThreshFromLevel } from './DifficultyCalcs';
 
@@ -52,17 +54,18 @@ function App() {
   <div className="_inputGridContainer">
     <div>
     <InputGrid title="Your Party" valsArr={partyLevelArr} setValsArr={setPartyLevelArr} inputGridType={InputGridTypes.PARTY_LEVEL} />
-    <p>Difficulty</p>
+    {/* <p>Difficulty</p>
   <p>{partyXPThresh.easy}</p>
   <p>{partyXPThresh.medium}</p>
   <p>{partyXPThresh.hard}</p>
   <p>{partyXPThresh.deadly}</p>
-  <p>{monsterXP}</p>
+  <p>{monsterXP}</p> */}
     </div>
     <div>
     <InputGrid title="Monsters" valsArr={monsterCRArr} setValsArr={setMonsterCRArr} inputGridType={InputGridTypes.MONSTER_CR}  />
-    <p>Encounter Difficulty: {EncounterDifficulties[encounterDifficulty]}</p>
     </div>
+    <DifficultyLevelBar difficulty={encounterDifficulty}/>
+
   </div>
   </div>)
 }
@@ -87,7 +90,7 @@ const InputGrid = (props) => {
 
   return (
     <div className="_inputGrid">
-      <h3 className="_inputGridTitle">{title}</h3>
+      <h5 className="_inputGridTitle">{title}</h5>
 
       {valsArr.map((val,index) => {
       const setVal = (value) => {
@@ -122,7 +125,7 @@ const ValAndCountContainer = (props) => {
     <div className='_valueAndCountContainer'>
           <ValInputField val={val} setVal={setVal} index={index} />
           <ValCountField count={count} setCount={setCount} />
-          <button className={"_removeRowButton " + (index === 0 ? "_hidden" : "")} onClick={() => {onTriggerRemove(index)}}>Remove</button>
+          <button className={"_removeRowButton " + (index === 0 ? "_hidden" : "")} onClick={() => {onTriggerRemove(index)}}><i class="bi bi-trash"></i></button>
     </div>
   )
 }
@@ -141,5 +144,21 @@ const ValCountField = (props) => {
     setCount(event.target.value)
   }
   return <input className='_countField' placeholder='Count' value={count} onChange={onCountChange}/>
+}
+
+const DifficultyLevelBar = (props) => {
+  const {difficulty} = props;
+  const difficultyBarCssClass = difficulty === 1 ? "_easyBar" : difficulty === 2 ? "_mediumBar" : difficulty === 3 ? "_hardBar" : "_deadlyBar"
+  return (
+    <div className='_difficultyBarContainer'>
+      <p className='_smallBottomPadding'>Encounter Difficulty: {EncounterDifficulties[difficulty]}</p>
+      <div className='_difficultyLevelBar'>
+        <div className={"_baseBar " + (difficulty > 0 ? difficultyBarCssClass : "")} />
+        <div className={"_baseBar " + (difficulty > 1 ? difficultyBarCssClass : "")}/>
+        <div className={"_baseBar " + (difficulty > 2 ? difficultyBarCssClass : "")}/>
+        <div className={"_baseBar " + (difficulty > 3 ? difficultyBarCssClass : "")} />
+      </div>
+    </div>
+  )
 }
 
