@@ -1,38 +1,100 @@
+:root {
+  --border-radius: 5px;
+  --green-text: rgb(92, 148, 13);
+  --green-background: rgb(178, 242, 187);
+}
+input {
+  border: 1px solid gray;
+}
+
 .App {
-  text-align: center;
+  width: 550px;
+  min-height: 200px;
+  padding: 10px;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+._partyLevelBox {
+  display: flex;
+  align-items: center;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+._inputGrid {
   display: flex;
   flex-direction: column;
-  align-items: center;
+}
+._inputGridTitle {
+  align-self: center;
+}
+
+._inputGridContainer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 10px;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+}
+._addRowButton {
+  margin-top: 5px;
+  width: fit-content;
+  border: none;
+  border-radius: var(--border-radius);
+  background-color: var(--green-background);
+  color: var(--green-text);
+}
+._countField {
+  width: 30px;
+  text-align: center;
+}
+._valueAndCountContainer {
+  display: flex;
+  align-self: flex-start;
+  justify-content: center;
+  align-items: center;
 }
 
-.App-link {
-  color: #61dafb;
+._hidden {
+  visibility: hidden;;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+._difficultyLevelBar {
+  height: 20px;
+  display: grid;
+  border: 1px solid gray;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+._baseBar {
+  border: 1px solid gray;
+  height: 100%;
+  transition: background-color 0.3s ease-in-out;
+}
+
+._easyBar {
+  background-color: #00ff00;
+}
+._mediumBar {
+  background-color: #ffff00;
+}
+._hardBar {
+  background-color: #ff0000;
+}
+._deadlyBar {
+  background-color: rgb(46, 10, 69);
+}
+
+._smallPadding {
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+._smallTopPadding {
+  padding-top: 5px;
+}
+._smallBottomPadding {
+  padding-bottom: 5px;
+}
+
+._inputGridHeaders {
+  display: flex;
+}
+p {
+  margin: 0;
 }
