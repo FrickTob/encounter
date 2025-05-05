@@ -8,9 +8,9 @@ input {
 }
 
 .App {
-  width: fit-content;
+  width: 550px;
+  min-height: 200px;
   padding: 10px;
-  border: 1px solid black;
 }
 
 ._partyLevelBox {
@@ -81,10 +81,20 @@ input {
   background-color: rgb(46, 10, 69);
 }
 
-._difficultyBarContainer {
-  padding-top: 10px;
+._smallPadding {
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+._smallTopPadding {
+  padding-top: 5px;
+}
+._smallBottomPadding {
+  padding-bottom: 5px;
 }
 
-._smallBottomPadding {
-  margin-bottom: 5px;
+._inputGridHeaders {
+  display: flex;
+}
+p {
+  margin: 0;
 }
