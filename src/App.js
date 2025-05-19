@@ -2,7 +2,16 @@ import {useEffect, useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.css'
 import "bootstrap-icons/font/bootstrap-icons.css";
 import './App.css';
-import { multiplyByMultiplier, getXPThreshFromCR, getXPThreshFromLevel } from './DifficultyCalcs';
+import { multiplyByMultiplier, getXPThreshFromCR, getXPThreshFromLevel, getCRFromXP } from './DifficultyCalcs';
+import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton'
+import TextField from '@mui/material/TextField';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
+import SaveIcon from '@mui/icons-material/Save';
+import KeyboardDoubleArrowDownIcon from '@mui/icons-material/KeyboardDoubleArrowDown';
+import KeyboardDoubleArrowUpIcon from '@mui/icons-material/KeyboardDoubleArrowUp';
+import { toggleButtonClasses } from '@mui/material';
 
 const EncounterDifficulties = {
   0: "Trivial",
@@ -30,13 +39,14 @@ function App() {
   }
   const [partyLevelArr,setPartyLevelArr] = useState(levelArrayStartValue)
   const [monsterCRArr, setMonsterCRArr] = useState(crArrayStartValue)
-
   const [partyXPThresh, setPartyXPThresh] = useState({easy: 0, medium: 0, hard: 0, deadly: 0})
   const [monsterXP, setMonsterXP] = useState(0)
-
+  const [usingCR, setUsingCR] = useState(true)
   const [encounterDifficulty, setEncounterDifficulty] = useState(0)
-
   const [invalidReason, setInvalidReason] = useState("")
+  const [showSavedEncounters, setShowSavedEncounters] = useState(true)
+  const [encounterName, setEncounterName] = useState("")
+  const [savedEncounters, setSavedEncounters] = useState(localStorage.getItem("encounters") ? JSON.parse(localStorage.getItem("encounters")) : [])
 
   useEffect(() => {
     const vals = {...partyLevelArr}
@@ -49,12 +59,15 @@ function App() {
   }, [partyLevelArr])
 
   useEffect(() => {
-    const monsterXPSum = monsterCRArr.reduce((acc, cr) => acc + (getXPThreshFromCR(cr.value) * cr.count),0)
+    const monsterXPSum =  monsterCRArr.reduce((acc, monster) => 
+      {
+        return acc + ((usingCR ? getXPThreshFromCR(monster.value) : monster.value) * monster.count)
+      },0)
     const numMonsters = monsterCRArr.reduce((acc, cr) => acc + cr.count,0)
     const monsterXP = multiplyByMultiplier(monsterXPSum, numMonsters)
     setMonsterXP(monsterXP)
     localStorage.setItem(MONSTER_CR_ARR_STR_KEY,JSON.stringify(monsterCRArr))
-  },[monsterCRArr])
+  },[monsterCRArr, usingCR])
 
   useEffect(() => {
     if (monsterXP < partyXPThresh.easy) setEncounterDifficulty(0)
@@ -76,30 +89,69 @@ function App() {
     }
   },[partyXPThresh, monsterXP])
 
+  const saveNewEncounter = () => {
+    if (encounterName === "") {
+      alert("Encounter name cannot be empty")
+      return
+    }
+    const encounter = {
+      name: encounterName,
+      partyLevelArr: partyLevelArr,
+      monsterCRArr: monsterCRArr,
+      usingCR: usingCR
+    }
+    const encounters = JSON.parse(localStorage.getItem("encounters")) || []
+    encounters.push(encounter)
+    localStorage.setItem("encounters", JSON.stringify(encounters))
+    setSavedEncounters(encounters)
+    setEncounterName("")
+  }
+
+  const setCurrentEncounter = (encounter) => {
+    setPartyLevelArr(encounter.partyLevelArr)
+    setMonsterCRArr(encounter.monsterCRArr)
+    setUsingCR(encounter.usingCR)
+    setEncounterName(encounter.name)
+  }
+
   return (<div className="App">
+        <div className='_flexContainer'>
+        <p>Encounter Name: </p>
+        <input value={encounterName} onChange={(e) => {
+        setEncounterName(e.target.value)}}/>
+        <IconButton onClick={saveNewEncounter}><SaveIcon /></IconButton>
+          <Button onClick={() => {
+            if (usingCR) {
+              setMonsterCRArr(monsterCRArr.map((val) => {
+                return {value: getXPThreshFromCR(val.value), count: val.count}
+              }))
+            }
+            else {
+              setMonsterCRArr(monsterCRArr.map((val) => {
+                return {value: getCRFromXP(val.value), count: val.count}
+              }))
+            }
+            setUsingCR(!usingCR)
+          }}>{usingCR ? "Use EXP" : "Use CR"}</Button>
+        </div>
   <div className="_inputGridContainer">
     <div>
     <InputGrid title="Your Party" valsArr={partyLevelArr} setValsArr={setPartyLevelArr} inputGridType={InputGridTypes.PARTY_LEVEL} />
-    {/* <p>Difficulty</p>
-  <p>{partyXPThresh.easy}</p>
-  <p>{partyXPThresh.medium}</p>
-  <p>{partyXPThresh.hard}</p>
-  <p>{partyXPThresh.deadly}</p>
-  <p>{monsterXP}</p> */}
     </div>
     <div>
-    <InputGrid title="Monsters" valsArr={monsterCRArr} setValsArr={setMonsterCRArr} inputGridType={InputGridTypes.MONSTER_CR}  />
+    <InputGrid title="Monsters" valsArr={monsterCRArr} setValsArr={setMonsterCRArr} inputGridType={InputGridTypes.MONSTER_CR} usingCR={usingCR} setUsingCR={setUsingCR}  />
     </div>
-    <DifficultyLevelBar invalidReason={invalidReason} difficulty={encounterDifficulty}/>
-
   </div>
+  
+    <DifficultyLevelBar invalidReason={invalidReason} difficulty={encounterDifficulty}/>
+    <SavedEncountersSection savedEncounters={savedEncounters} setSavedEncounters={setSavedEncounters} setCurrentEncounter={setCurrentEncounter} showSavedEncounters={showSavedEncounters} setShowSavedEncounters={setShowSavedEncounters}/>
   </div>)
 }
 
 export default App;
 
 const InputGrid = (props) => {
-  const {title, valsArr, setValsArr,inputGridType} = props;
+  const {title, valsArr, setValsArr,inputGridType, usingCR, setUsingCR} = props;
 
   const addNewRow =() => {
     const values = [...valsArr]
@@ -113,13 +165,16 @@ const InputGrid = (props) => {
     setValsArr(values)
   }
 
+  
+
 
   return (
     <div className="_inputGrid">
       <h5 className="_inputGridTitle">{title}</h5>
       <div className="_inputGridHeaders">
         <p className="_countField">#</p>
-        <p>{inputGridType === InputGridTypes.MONSTER_CR ? "CR" : "Level"}</p>
+        <p>{inputGridType === InputGridTypes.PARTY_LEVEL ? "Level" : usingCR ? "CR" : "EXP"}</p>
+        <div className='_spacer' />
       </div>
       {valsArr.map((val,index) => {
       const setVal = (value) => {
@@ -141,7 +196,9 @@ const InputGrid = (props) => {
               count={val.count} 
               setCount={setCount} 
               onTriggerRemove={onTriggerRemove} 
-              index={index} />
+              index={index}
+              usingCR={usingCR}
+               />
         )
       })}
       <button className="_addRowButton" onClick={addNewRow}>Add Row</button>
@@ -150,22 +207,22 @@ const InputGrid = (props) => {
 }
 
 const ValAndCountContainer = (props) => {
-  const {type, val, setVal, count, setCount, onTriggerRemove, index} = props;
+  const {type, val, setVal, count, setCount, onTriggerRemove, index, usingCR} = props;
   return (
     <div className='_valueAndCountContainer'>
           <ValCountField count={count} setCount={setCount} />
-          <ValInputField type={type} val={val} setVal={setVal} />
-          <button className={"_removeRowButton " + (index === 0 ? "_hidden" : "")} onClick={() => {onTriggerRemove(index)}}><i class="bi bi-trash"></i></button>
+          <ValInputField type={type} val={val} setVal={setVal} usingCR={usingCR} />
+          <IconButton className={"_removeRowButton " + (index === 0 ? "_hidden" : "")} onClick={() => {onTriggerRemove(index)}}><DeleteIcon /></IconButton>
     </div>
   )
 }
 
 const ValInputField = (props) => {
-  const {type, val, setVal} = props;
+  const {type, val, setVal, usingCR} = props;
   const onValChange = (event) => {
     setVal(event.target.value)
   }
-  const placeholder = type === InputGridTypes.MONSTER_CR ? "CR" : "Level"
+  const placeholder = type === InputGridTypes.PARTY_LEVEL ? "Level" : usingCR ? "CR" : "EXP"
   return <input placeholder={placeholder} value={val} onChange={onValChange}/>
 }
 
@@ -182,7 +239,7 @@ const DifficultyLevelBar = (props) => {
   const difficultyBarCssClass = difficulty === 1 ? "_easyBar" : difficulty === 2 ? "_mediumBar" : difficulty === 3 ? "_hardBar" : "_deadlyBar"
   
   return (
-    <div className="_smallTopPadding">
+    <div className="_smallTopPadding _block">
       {invalidReason !== "" ? 
       <p>{invalidReason}</p> : 
       <div>
@@ -197,5 +254,38 @@ const DifficultyLevelBar = (props) => {
       }
     </div>
   )
+}
+
+const SavedEncountersSection = (props) => {
+  const {savedEncounters, setSavedEncounters, setCurrentEncounter, showSavedEncounters, setShowSavedEncounters} = props;
+
+  const deleteEncounter = (index) => {
+    const tempEncounters = [...savedEncounters]
+    tempEncounters.splice(index, 1)
+    localStorage.setItem("encounters", JSON.stringify(tempEncounters))
+    setSavedEncounters(tempEncounters)
+  }
+
+  return(
+    <div>
+        <div className='_flexContainer'>
+      <div>Saved Encounters ({savedEncounters.length})</div>
+      <IconButton onClick={() => {
+        setShowSavedEncounters(!showSavedEncounters)}}>
+        {showSavedEncounters ? <KeyboardDoubleArrowUpIcon /> : <KeyboardDoubleArrowDownIcon />}
+      </IconButton>
+      </div>
+            {showSavedEncounters && savedEncounters.map((encounter, index) => {
+        return (
+          <div key={index} className='_savedEncounter'>
+            <p>{encounter.name}</p>
+            <p>Party Levels: {encounter.partyLevelArr.map((val) => val.value + " (" + val.count + ")").join(", ")}</p>
+            <p>Monsters: {encounter.monsterCRArr.map((val) => (encounter.usingCR ? val.value : getCRFromXP(val.value)) + " (" + val.count + ")").join(", ")}</p>
+            <IconButton onClick={() => {setCurrentEncounter(encounter)}}><EditIcon /></IconButton>
+            <IconButton onClick={() => {deleteEncounter(index)}}><DeleteIcon /></IconButton>
+          </div>
+        )
+      })}
+      </div>)
 }
 

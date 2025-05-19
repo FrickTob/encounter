@@ -17,6 +17,9 @@ input {
   display: flex;
   align-items: center;
 }
+._spacer {
+  flex: 1
+}
 
 ._inputGrid {
   display: flex;
@@ -97,4 +100,22 @@ input {
 }
 p {
   margin: 0;
+}
+
+._flexContainer {
+  display: flex;
+  align-items: center;
+}
+._block {
+  display: block;
+  width: 100%;
+}
+._savedEncounter {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 32px 32px;
+  place-items: center;
+  border-bottom: 1px solid gray;
+}
+._removeRowButton {
+  height: 24px;
 }

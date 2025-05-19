@@ -71,10 +71,55 @@ export const getXPThreshFromCR = (cr) => {
             30: 155000,
         }
 
-    const convertedCr = Number(cr)
+    const split = String(cr).split('/')
+    let convertedCr = Number(cr)
+    if (split.length > 1) {
+        convertedCr = Number(split[0]) / Number(split[1])
+        if (isNaN(convertedCr)) return 0; // Invalid CR
+    }
     if (convertedCr < 0 || convertedCr > 30) return 0; // Invalid CR
     if (xpTable[convertedCr]) return xpTable[convertedCr];
     return 0; // CR not found in table
+}
+
+export const getCRFromXP = (xp) => {
+    const xpTable = {
+        0: 0,
+        25: .125,
+        50: .25,
+        100: .5,
+        200: 1,
+        450: 2,
+        700: 3,
+        1100: 4,
+        1800: 5,
+        2300: 6,
+        2900: 7,
+        3900: 8,
+        5000: 9,
+        5900: 10,
+        7200: 11,
+        8400: 12,
+        10000: 13,
+        11500: 14,
+        13000: 15,
+        15000: 16,
+        18000: 17,
+        20000: 18,
+        22000: 19,
+        25000:20,
+        33000: 21,
+        41000: 22,
+        50000: 23,
+        62000: 24,
+        75000: 25,
+        105000: 27,
+        120000: 28,
+        135000: 29,
+        155000: 30,
+    }
+    if (xpTable[xp]) return xpTable[xp];
+    return 0; // XP not found in table
 }
 
 export const multiplyByMultiplier = (xp,numMonsters) => {
